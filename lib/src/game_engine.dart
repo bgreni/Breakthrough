@@ -32,16 +32,13 @@ class GameEngine {
   State state =  new State(new Board(), WHITE);
   List<State> history = [];
   bool gameOver = false;
-  AI ai = RandomAI();
+  AI ai = NegamaxAI();
 
 
   GameEngine() {
     state.board.initBoard();
   }
 
-  bool applyMove(Move move) {
-    return state.board.apply(move);
-  }
 
   void reset() {
     State state =  new State(new Board(), WHITE);
@@ -66,102 +63,22 @@ class GameEngine {
       m = move;
     }
 
-    if (m == null || !isLegalMove(m)) return false;
+    if (m == null || !state.isLegalMove(m)) return false;
     make_move(m);
-    if (isWin()) {
+    if (state.isGameOver()) {
       this.gameOver = true;
     }
-    reverseTurn();
     return true;
   }
 
-  bool isWin() {
-    return state.board.topRow().contains(1) || state.board.bottomRow().contains(2);
-  }
 
-  List<Move> getLegalMoves(Color toPlay) {
-    List<Move> legalMoves = [];
-    for (int i = 0; i < C.TOTAL_TILES; ++i) {
-      if (state.board[i] == 2) {
-        blackLegalMoveIndexes(i).forEach((location) {
-          if (location < C.TOTAL_TILES) {
-            var m = new Move(state.turn, i, location, 0);
-            if (isLegalMove(m)) {
-              legalMoves.add(m);
-            }
-          }
-        });
-      }
-    }
-    return legalMoves;
-  }
-
-  bool isIllegalCapture(Move move) {
-    int diff = move.to - move.from;
-    return diff.abs() == C.BOARD_SIZE && state.board[move.to] != C.EMPTY_NUM;
-  }
-
-  List<int> whiteLegalMoveIndexes(int location) {
-    if (state.board.leftColumn().contains(location)) {
-      return [
-        location - C.BOARD_SIZE,
-        location - C.BOARD_SIZE + 1,
-      ];
-    } else if (state.board.rightColumn().contains(location)) {
-      return [
-        location - C.BOARD_SIZE,
-        location - C.BOARD_SIZE - 1,
-      ];
-    }
-    
-    return [
-      location - C.BOARD_SIZE,
-      location - C.BOARD_SIZE - 1,
-      location - C.BOARD_SIZE + 1,
-    ];
-  }
-
-  List<int> blackLegalMoveIndexes(int location) {
-    if (state.board.leftColumn().contains(location)) {
-      return [
-        location + C.BOARD_SIZE,
-        location + C.BOARD_SIZE + 1,
-      ];
-    } else if (state.board.rightColumn().contains(location)) {
-      return [
-        location + C.BOARD_SIZE,
-        location + C.BOARD_SIZE - 1,
-      ];
-    }
-    return [
-      location + C.BOARD_SIZE,
-      location + C.BOARD_SIZE - 1,
-      location + C.BOARD_SIZE + 1,
-    ];
-  }
-
-  bool isLegalMove(Move move) {
-    if (isIllegalCapture(move) ||
-        state.board[move.from] != Piece.colorToInt(state.turn) ||
-        state.board[move.from] == state.board[move.to]) return false;
-
-    if (move.color == C.WHITE) {
-      return whiteLegalMoveIndexes(move.from).contains(move.to);
-    } else {
-      return blackLegalMoveIndexes(move.from).contains(move.to);
-    }
-  }
 
   void make_move(Move move) {
-    state.board.apply(move);
-  }
-
-  void reverseTurn() {
-    state.turn = state.turn == WHITE ? BLACK : WHITE;
+    state.applyMove(move);
   }
 
   void makeAIMove() {
-    Move move = ai.selectMove(getLegalMoves(state.turn));
+    Move move = ai.selectMove(state.getLegalMoves(state.turn), state);
     print('CHOSEN AI MOVE: ${move.from} ${move.to}');
     this.move(move);
   }
@@ -213,6 +130,10 @@ class Board {
   List<int> slice(int start, int end) {
     return board.sublist(start, end);
   }
+
+  int get(int x, int y) {
+    return board[coordToInt(x, y)];
+  }
   
   List<int> bottomRow() {
     return board.sublist(C.TOTAL_TILES - C.BOARD_SIZE, C.TOTAL_TILES);
@@ -236,7 +157,7 @@ class Board {
 
     board[move.from] = C.EMPTY_NUM;
     board[move.to] = Piece.colorToInt(move.color);
-    printBoard();
+    // printBoard();
     return true;
   }
 
@@ -253,6 +174,16 @@ class Board {
       board[i] = C.WHITE_NUM;
     }
 
+  }
+
+  Point IntToCoord(int location) {
+    int y = (location / C.BOARD_SIZE).floor();
+    int x = location % C.BOARD_SIZE;
+    return new Point(x, y);
+  }
+
+  int coordToInt(int x, int y) {
+      return (C.BOARD_SIZE + 1) * x + y;
   }
 
   Board copy() {
@@ -274,4 +205,85 @@ class State {
     Board board;
     Color turn;
     State(this.board, this.turn);
+
+    void reverseTurn() {
+      turn = turn == C.WHITE ? C.BLACK : C.WHITE;
+    }
+
+    bool isGameOver() {
+      return board.topRow().contains(1) || board.bottomRow().contains(2);
+    }
+
+    void applyMove(Move move) {
+      board.apply(move);
+      reverseTurn();
+    }
+
+    State copy() {
+      return new State(board.copy(), new Color(turn.value));
+    }
+
+    List<Move> getLegalMoves(Color toPlay) {
+      List<Move> legalMoves = [];
+      for (int i = 0; i < C.TOTAL_TILES; ++i) {
+        int player = Piece.colorToInt(toPlay);
+        if (board[i] == player) {
+          var locations = getLegalMoveIndexes(i, toPlay);
+          locations.forEach((location) {
+            if (location < C.TOTAL_TILES) {
+              var m = new Move(turn, i, location, 0);
+              if (isLegalMove(m)) {
+                legalMoves.add(m);
+              }
+            }
+          });
+        }
+      }
+      return legalMoves;
+    }
+
+    List<int> getLegalMoveIndexes(int location, Color toPlay) {
+      int bs;
+      if (toPlay == C.WHITE) {
+        bs = -C.BOARD_SIZE;
+      } else {
+        bs = C.BOARD_SIZE;
+      }
+
+      if (board.leftColumn().contains(location)) {
+        return [
+          location + bs,
+          location + bs + 1,
+        ];
+      } else if (board.rightColumn().contains(location)) {
+        return [
+          location + bs,
+          location + bs - 1,
+        ];
+      }
+      return [
+        location + bs,
+        location + bs - 1,
+        location + bs + 1,
+      ];
+    }
+
+    bool isIllegalCapture(Move move) {
+      int diff = move.to - move.from;
+      return diff.abs() == C.BOARD_SIZE && board[move.to] != C.EMPTY_NUM;
+    }
+
+    bool isLegalMove(Move move) {
+      if (isIllegalCapture(move) ||
+          board[move.from] != Piece.colorToInt(turn) ||
+          board[move.from] == board[move.to]) return false;
+
+      return getLegalMoveIndexes(move.from, move.color).contains(move.to);
+    }
+}
+
+class Point {
+  int x;
+  int y;
+  Point(this.x, this.y);
 }
