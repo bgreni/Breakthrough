@@ -27,6 +27,8 @@ class GameEngine {
     'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59, 'e1': 60, 'f1': 61, 'g1': 62, 'h1': 63
   };
 
+
+
   State state =  new State(new Board(), WHITE);
   List<State> history = [];
   bool gameOver = false;
@@ -100,6 +102,18 @@ class GameEngine {
   }
 
   List<int> whiteLegalMoveIndexes(int location) {
+    if (state.board.leftColumn().contains(location)) {
+      return [
+        location - C.BOARD_SIZE,
+        location - C.BOARD_SIZE + 1,
+      ];
+    } else if (state.board.rightColumn().contains(location)) {
+      return [
+        location - C.BOARD_SIZE,
+        location - C.BOARD_SIZE - 1,
+      ];
+    }
+    
     return [
       location - C.BOARD_SIZE,
       location - C.BOARD_SIZE - 1,
@@ -108,6 +122,17 @@ class GameEngine {
   }
 
   List<int> blackLegalMoveIndexes(int location) {
+    if (state.board.leftColumn().contains(location)) {
+      return [
+        location + C.BOARD_SIZE,
+        location + C.BOARD_SIZE + 1,
+      ];
+    } else if (state.board.rightColumn().contains(location)) {
+      return [
+        location + C.BOARD_SIZE,
+        location + C.BOARD_SIZE - 1,
+      ];
+    }
     return [
       location + C.BOARD_SIZE,
       location + C.BOARD_SIZE - 1,
@@ -195,6 +220,14 @@ class Board {
 
   List<int> topRow() {
     return board.sublist(0, C.BOARD_SIZE);
+  }
+
+  List<int> leftColumn() {
+    return [0, 8, 16, 24, 42, 40, 48, 56];
+  }
+
+  List<int> rightColumn() {
+    return [7, 15, 23, 31, 39, 47, 55, 63];
   }
 
   bool apply(Move move) {
