@@ -104,7 +104,7 @@ class ChessBoard extends StatefulWidget {
   final MoveCallback onMove;
 
   /// Callback for when a player is checkmated
-  final Function(String) onWin;
+  final OnWinCallBack onWin;
 
   /// Callback for when a player is in check
   // final CheckCallback onCheck;
@@ -139,6 +139,7 @@ class ChessBoard extends StatefulWidget {
 }
 
 class _ChessBoardState extends State<ChessBoard> {
+
   @override
   Widget build(BuildContext context) {
     print(widget.size);

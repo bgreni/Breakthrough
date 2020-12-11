@@ -58,6 +58,7 @@ class GameEngine {
     if (move is Map) {
       int from = SQUARES[move['from']];
       int to = SQUARES[move['to']];
+      print('to $to : from $from');
       m = new Move(state.turn, from, to, 0);
     } else if (move is Move) {
       m = move;
@@ -70,8 +71,6 @@ class GameEngine {
     }
     return true;
   }
-
-
 
   void make_move(Move move) {
     state.applyMove(move);
@@ -183,7 +182,9 @@ class Board {
   }
 
   int coordToInt(int x, int y) {
-      return (C.BOARD_SIZE + 1) * x + y;
+      if (x >= 0 && y >= 0 && x < C.BOARD_SIZE && y < C.BOARD_SIZE)
+        return (C.BOARD_SIZE) * x + y;
+      return -1;
   }
 
   Board copy() {
@@ -197,6 +198,10 @@ class Board {
       print(board.sublist(i, i+C.BOARD_SIZE - 1));
     }
     print("");
+  }
+
+  bool legalLocation(int location) {
+    return location < C.TOTAL_TILES && location > 0;
   }
 
 }
@@ -230,7 +235,7 @@ class State {
         if (board[i] == player) {
           var locations = getLegalMoveIndexes(i, toPlay);
           locations.forEach((location) {
-            if (location < C.TOTAL_TILES) {
+            if (board.legalLocation(location)) {
               var m = new Move(turn, i, location, 0);
               if (isLegalMove(m)) {
                 legalMoves.add(m);
@@ -250,12 +255,12 @@ class State {
         bs = C.BOARD_SIZE;
       }
 
-      if (board.leftColumn().contains(location)) {
+      if (board.IntToCoord(location).x == 0) {
         return [
           location + bs,
           location + bs + 1,
         ];
-      } else if (board.rightColumn().contains(location)) {
+      } else if (board.IntToCoord(location).x == C.BOARD_SIZE - 1) {
         return [
           location + bs,
           location + bs - 1,
@@ -277,8 +282,20 @@ class State {
       if (isIllegalCapture(move) ||
           board[move.from] != Piece.colorToInt(turn) ||
           board[move.from] == board[move.to]) return false;
-
       return getLegalMoveIndexes(move.from, move.color).contains(move.to);
+    }
+
+    List<Move> legalMovesForPosition(int position, Color toPlay) {
+      List<Move> moves = [];
+      getLegalMoveIndexes(position, toPlay).forEach((location) {
+        if (board.legalLocation(location)) {
+          Move m = new Move(toPlay, position, location, 0);
+          if (isLegalMove(m)) {
+            moves.add(m);
+          }
+        }
+      });
+      return moves;
     }
 }
 
@@ -286,4 +303,8 @@ class Point {
   int x;
   int y;
   Point(this.x, this.y);
+  @override
+  String toString() {
+    return 'x: $x ; y: $y';
+  }
 }

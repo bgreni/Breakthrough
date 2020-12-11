@@ -5,8 +5,7 @@ import 'constants.dart' as C;
 import 'board_controller.dart';
 
 typedef Null MoveCallback(String moveNotation);
-typedef Null CheckMateCallback(PieceColor color);
-typedef Null CheckCallback(PieceColor color);
+typedef Null OnWinCallBack(String string);
 
 class BoardModel extends Model {
   /// The size of the board (The board is a square)
@@ -16,7 +15,7 @@ class BoardModel extends Model {
   MoveCallback onMove;
 
   /// Callback for when a player is checkmated
-  Function(String) onWin;
+  OnWinCallBack onWin;
 
   /// If the white side of the board is towards the user
   bool whiteSideTowardsUser;
