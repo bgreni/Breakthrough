@@ -1,12 +1,10 @@
 import 'dart:math';
-
-import 'package:flutter/material.dart';
 import 'constants.dart' as C;
 import 'AI.dart';
 
 class GameEngine {
-  static const Color BLACK = C.BLACK;
-  static const Color WHITE = C.WHITE;
+  static const int BLACK = C.BLACK;
+  static const int WHITE = C.WHITE;
 
   static const Map<String, String> FLAGS = const {
     'NORMAL': 'n',
@@ -81,27 +79,47 @@ class GameEngine {
     print('CHOSEN AI MOVE: ${move.from} ${move.to}');
     this.move(move);
   }
+
+  int AIPlayout(AI a1, AI a2) {
+    State s = new State(new Board(), C.WHITE);
+    s.board.initBoard();
+    Move m;
+    while(true) {
+      m = a1.selectMove(s.getLegalMoves(C.WHITE), s);
+      print('P1: $m');
+      s.applyMove(m);
+      if (s.isGameOver()) {
+        return C.WHITE;
+      }
+      m = a2.selectMove(s.getLegalMoves(C.BLACK), s);
+      print('P2: $m');
+      s.applyMove(m);
+      if (s.isGameOver()) {
+        return C.BLACK;
+      }
+    }
+  }
 }
 
 
 class Piece {
-  final Color color;
+  final int color;
   PieceType type;
   Piece(this.color) {
     this.type = Piece.colorToPieceType(this.color);
   }
 
-  static PieceType colorToPieceType(Color color) {
+  static PieceType colorToPieceType(int color) {
     if (color == C.WHITE) return PieceType.WHITE;
     return PieceType.BLACK;
   }
 
-  static int colorToInt(Color color) {
+  static int colorToInt(int color) {
     if (color == C.WHITE) return 1;
     return 2;
   }
 
-  static Color intToColor(int num) {
+  static int intToColor(int num) {
     if (num == 1) return C.WHITE;
     return C.BLACK;
   }
@@ -114,11 +132,14 @@ enum PieceType {
 }
 
 class Move {
-  final Color color;
+  final int color;
   final int from;
   final int to;
   final int flags;
   const Move(this.color, this.from, this.to, this.flags);
+  toString() {
+    return '$color plays $from to $to';
+  }
 }
 
 class Board {
@@ -154,7 +175,7 @@ class Board {
     // occupied by own piece
     if (board[move.to] == board[move.from]) return false;
 
-    board[move.from] = C.EMPTY_NUM;
+    board[move.from] = C.EMPTY;
     board[move.to] = Piece.colorToInt(move.color);
     // printBoard();
     return true;
@@ -162,15 +183,15 @@ class Board {
 
   void initBoard() {
     for (int i = 0; i < C.BOARD_SIZE * C.BOARD_SIZE; ++i) {
-      board[i] = C.EMPTY_NUM;
+      board[i] = C.EMPTY;
     }
 
     for (int i = 0; i < C.BOARD_SIZE * 2; ++i) {
-      board[i] = C.BLACK_NUM;
+      board[i] = C.BLACK;
     }
 
     for (int i = (C.BOARD_SIZE * C.BOARD_SIZE) - C.BOARD_SIZE * 2; i < C.BOARD_SIZE * C.BOARD_SIZE; ++i) {
-      board[i] = C.WHITE_NUM;
+      board[i] = C.WHITE;
     }
 
   }
@@ -201,14 +222,14 @@ class Board {
   }
 
   bool legalLocation(int location) {
-    return location < C.TOTAL_TILES && location > 0;
+    return location < C.TOTAL_TILES && location >= 0;
   }
 
 }
 
 class State {
     Board board;
-    Color turn;
+    int turn;
     State(this.board, this.turn);
 
     void reverseTurn() {
@@ -225,10 +246,10 @@ class State {
     }
 
     State copy() {
-      return new State(board.copy(), new Color(turn.value));
+      return new State(board.copy(), turn);
     }
 
-    List<Move> getLegalMoves(Color toPlay) {
+    List<Move> getLegalMoves(int toPlay) {
       List<Move> legalMoves = [];
       for (int i = 0; i < C.TOTAL_TILES; ++i) {
         int player = Piece.colorToInt(toPlay);
@@ -247,7 +268,7 @@ class State {
       return legalMoves;
     }
 
-    List<int> getLegalMoveIndexes(int location, Color toPlay) {
+    List<int> getLegalMoveIndexes(int location, int toPlay) {
       int bs;
       if (toPlay == C.WHITE) {
         bs = -C.BOARD_SIZE;
@@ -275,7 +296,7 @@ class State {
 
     bool isIllegalCapture(Move move) {
       int diff = move.to - move.from;
-      return diff.abs() == C.BOARD_SIZE && board[move.to] != C.EMPTY_NUM;
+      return diff.abs() == C.BOARD_SIZE && board[move.to] != C.EMPTY;
     }
 
     bool isLegalMove(Move move) {
@@ -285,7 +306,7 @@ class State {
       return getLegalMoveIndexes(move.from, move.color).contains(move.to);
     }
 
-    List<Move> legalMovesForPosition(int position, Color toPlay) {
+    List<Move> legalMovesForPosition(int position, int toPlay) {
       List<Move> moves = [];
       getLegalMoveIndexes(position, toPlay).forEach((location) {
         if (board.legalLocation(location)) {
@@ -308,3 +329,4 @@ class Point {
     return 'x: $x ; y: $y';
   }
 }
+

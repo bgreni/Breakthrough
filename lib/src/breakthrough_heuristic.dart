@@ -1,7 +1,6 @@
 import 'constants.dart' as C;
 import 'AI.dart';
 import 'game_engine.dart';
-import 'package:flutter/material.dart' as flut;
 
 class Heuristic {
   static const double ALPHA_INIT = double.negativeInfinity;
@@ -13,11 +12,21 @@ class Heuristic {
   static const double CONNECTED_HVAL = 35;
   static const double CONNECTED_VVAL = 15;
 
-  double evalHeuristic(State state, int maxPiece, int minPiece, flut.Color maximisingPlayer) {
+  double evalHeuristic(State state, int maxPiece, int minPiece, int maximisingPlayer) {
     double boardValue = 0;
     Board board = state.board;
     int maxPieces = 0;
     int minPieces = 0;
+
+    if (state.isGameOver()) {
+      if (state.turn != maximisingPlayer) {
+        return BETA_INIT;
+      } else {
+        return ALPHA_INIT;
+      }
+
+    }
+
     for (int i = 0; i < C.TOTAL_TILES; ++i) {
       if (board[i] == maxPiece) {
         ++maxPieces;
@@ -47,14 +56,14 @@ class Heuristic {
     return value;
   }
 
-  double getValOfSquare(int i, State state, flut.Color maximisingPlayer) {
+  double getValOfSquare(int i, State state, int maximisingPlayer) {
     double total = 0;
     Board board = state.board;
     total += getPieceValue(i, state);
 
     // bonus of piece being close to winning
     Point p = board.IntToCoord(i);
-    total += closeToWin(p, maximisingPlayer, board);
+    // total += closeToWin(p, maximisingPlayer, board);
 
     // capture danger bonus
     total += captureDanger(p, maximisingPlayer, board);
@@ -65,7 +74,7 @@ class Heuristic {
     return total;
   }
 
-  double homeGround(Point p, flut.Color player) {
+  double homeGround(Point p, int player) {
     if (player == C.WHITE && p.y == C.BOARD_SIZE - 1) return HOME_GROUND_VAL;
     if (player == C.BLACK && p.y == 0) return HOME_GROUND_VAL;
     return 0;
@@ -82,7 +91,7 @@ class Heuristic {
     return total;
   }
 
-  double closeToWin(Point p, flut.Color toPlay, Board board) {
+  double closeToWin(Point p, int toPlay, Board board) {
     if (toPlay == C.WHITE && p.y == 1 && captureDanger(p, toPlay, board) == 0) {
       return ALMOST_WIN_VAL;
     } else if (toPlay == C.BLACK && p.y == C.BOARD_SIZE - 2 && captureDanger(p, toPlay, board) == 0) {
@@ -91,7 +100,7 @@ class Heuristic {
     return 0;
   }
 
-  double captureDanger(Point point, flut.Color toPlay, Board board) {
+  double captureDanger(Point point, int toPlay, Board board) {
     int modifier = toPlay == C.WHITE ? -1 : 1;
     int player = board.get(point.x, point.y);
     int opponent = player == 1 ? 2 : 1;

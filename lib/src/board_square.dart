@@ -35,7 +35,7 @@ class BoardSquare extends StatelessWidget {
           return model.enableUserMoves ? true : false;
         }, onAccept: (List moveInfo) {
           // A way to check if move occurred.
-          Color moveColor = model.game.state.turn;
+          int moveColor = model.game.state.turn;
           model.game.move({"from": moveInfo[0], "to": squareName});
 
           if (model.game.state.turn != moveColor) {
@@ -57,7 +57,7 @@ class BoardSquare extends StatelessWidget {
       return Container();
     }
 
-    Color piece = model.game
+    int piece = model.game
         .get(squareName)
         .color;
     if (piece == C.WHITE) {

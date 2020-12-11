@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart' as flut;
 import 'constants.dart' as C;
 import 'game_engine.dart';
 import 'dart:math';
@@ -8,7 +7,7 @@ import 'breakthrough_heuristic.dart';
 
 /// Base AI class containing common methods for heuristic evaluation
 abstract class AI {
-  flut.Color maximisingPlayer;
+  int maximisingPlayer;
   static const double ALPHA_INIT = double.negativeInfinity;
   static const double BETA_INIT = double.infinity;
 
@@ -19,6 +18,7 @@ abstract class AI {
 
 
   Move selectMove(List<Move> legalMoves, State state);
+  String getName();
 
   double staticallyEvaluate(State state) {
     if (state.isGameOver() && state.turn != this.maximisingPlayer) {
@@ -46,6 +46,10 @@ abstract class AI {
 class RandomAI extends AI {
   Random rng = new Random();
 
+  String getName() {
+    return "Random";
+  }
+
   Move selectMove(List<Move> legalMoves, State state) {
     return legalMoves[rng.nextInt(legalMoves.length)];
   }
@@ -54,8 +58,11 @@ class RandomAI extends AI {
 /// Negamx player using iterative deepening
 class NegamaxAI extends AI {
   int maxDepth = 4;
-
   bool searchedFullTree = false;
+
+  String getName() {
+    return "Negamax";
+  }
 
   Move selectMove(List<Move> legalMoves, State state) {
     maximisingPlayer = state.turn;
@@ -154,6 +161,10 @@ class FlatMCTSAI extends AI {
   Stopwatch watch = new Stopwatch();
   static const int PLAYOUT_TIME_MILLIS = 1000;
 
+  String getName() {
+    return "FlatMCTS";
+  }
+
   Move selectMove(List<Move> legalMoves, State state) {
     List<int> wins = new List.filled(legalMoves.length, 0);
     int counter = 0;
@@ -175,7 +186,7 @@ class FlatMCTSAI extends AI {
 
   PlayoutResult playout(Move move, State state) {
     int turns = 1;
-    flut.Color wantWin = state.turn;
+    int wantWin = state.turn;
     state.applyMove(move);
 
     while (!state.isGameOver()) {
