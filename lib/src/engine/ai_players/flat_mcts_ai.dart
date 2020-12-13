@@ -4,7 +4,7 @@ import 'dart:math';
 
 class FlatMCTSAI extends AI {
   Stopwatch watch = new Stopwatch();
-  static const int PLAYOUT_TIME = 1;
+  static const int PLAYOUT_TIME = 10;
 
   String getName() {
     return "FlatMCTS";

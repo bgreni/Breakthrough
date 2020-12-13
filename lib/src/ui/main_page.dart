@@ -83,10 +83,9 @@ class MainPageState extends State<MainPage> {
 
   Widget SetDifficultyButton() {
     return new DropdownButton(
-        icon: Icon(GetArrowWidget()),
         underline: Container(
           height: 2,
-          color: Colors.deepPurpleAccent,
+          color: Colors.blueAccent,
         ),
         hint: new Text('Difficulty: ${difficulty}'),
         items: <int>[1, 2, 3].map((int value) {
@@ -108,7 +107,7 @@ class MainPageState extends State<MainPage> {
         color: Colors.blue,
         onPressed: () {
           Navigator.push(context,
-          MaterialPageRoute(builder: (context) =>
+          CupertinoPageRoute(builder: (context) =>
               GamePage(
                 boardType: selectedBoardType,
                 difficulty: difficulty,
@@ -123,6 +122,10 @@ class MainPageState extends State<MainPage> {
 
   Widget PickBoardList() {
     return new DropdownButton<String>(
+        underline: Container(
+          height: 2,
+          color: Colors.blueAccent,
+        ),
         hint: new Text('Table color: ${selectedBoardType}'),
         items: <String>['Brown', 'Dark Brown', 'Green', 'Orange'].map((String value) {
           return new DropdownMenuItem(
@@ -137,14 +140,5 @@ class MainPageState extends State<MainPage> {
         });
       }
     );
-  }
-
-  IconData GetArrowWidget() {
-    if (Platform.isAndroid) {
-      return Icons.arrow_downward;
-    }
-    if (Platform.isIOS) {
-      return CupertinoIcons.arrow_down;
-    }
   }
 }

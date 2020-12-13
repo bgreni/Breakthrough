@@ -41,7 +41,7 @@ class BoardSquare extends StatelessWidget {
           if (model.game.state.turn != moveColor) {
             model.onMove(
                 moveInfo[1] == "P" ? squareName : moveInfo[1].toString() + squareName);
-            if (model.enableAI)
+            if (model.enableAI && !model.game.gameOver)
               model.game.makeAIMove();
           }
           model.refreshBoard();
