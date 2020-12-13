@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'dart:async';
 import 'package:chess_vectors_flutter/chess_vectors_flutter.dart';
-import 'constants.dart' as C;
+import '../engine/constants.dart' as C;
 import 'board_model.dart';
 
 /// A single square on the chessboard
@@ -41,7 +41,8 @@ class BoardSquare extends StatelessWidget {
           if (model.game.state.turn != moveColor) {
             model.onMove(
                 moveInfo[1] == "P" ? squareName : moveInfo[1].toString() + squareName);
-            model.game.makeAIMove();
+            if (model.enableAI)
+              model.game.makeAIMove();
           }
           model.refreshBoard();
         }),

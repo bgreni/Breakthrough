@@ -1,4 +1,4 @@
-import 'game_engine.dart';
+import '../engine/game_engine.dart';
 
 enum PieceType { Pawn, Rook, Knight, Bishop, Queen, King }
 

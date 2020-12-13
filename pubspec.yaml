@@ -8,6 +8,7 @@ homepage: https://www.github.com/bgreni/Breakthrough
 dependencies:
   chess_vectors_flutter: ">=1.0.6 <2.0.0"
   scoped_model: ">=1.0.0 <2.0.0"
+  shared_preferences: "^0.5.12+4"
 
   flutter:
     sdk: flutter

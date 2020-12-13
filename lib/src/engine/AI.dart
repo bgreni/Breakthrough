@@ -21,22 +21,20 @@ abstract class AI {
   String getName();
 
   double staticallyEvaluate(State state) {
-    if (state.isGameOver() && state.turn != this.maximisingPlayer) {
+    int winner = state.winner();
+    if (winner != this.maximisingPlayer && winner != 0) {
       return BETA_INIT;
     }
 
-    if (state.isGameOver() && state.turn == this.maximisingPlayer) {
+    if (state.winner() == this.maximisingPlayer) {
       return ALPHA_INIT;
     }
-
 
     int maxPiece = state.turn != this.maximisingPlayer ? 1 : 2;
     int minPiece = maxPiece == 1 ? 2 : 1;
 
     return heuristic.evalHeuristic(state, maxPiece, minPiece, this.maximisingPlayer);
   }
-
-
 }
 
 
@@ -51,28 +49,40 @@ class RandomAI extends AI {
   }
 
   Move selectMove(List<Move> legalMoves, State state) {
+    if (legalMoves.length == 0) return null;
     return legalMoves[rng.nextInt(legalMoves.length)];
   }
 }
 
-/// Negamx player using iterative deepening
+/// Negamax player using iterative deepening
 class NegamaxAI extends AI {
-  int maxDepth = 4;
+  int maxDepth = 5;
   bool searchedFullTree = false;
+  int maxSeconds = 5;
+  Stopwatch watch = new Stopwatch();
+
 
   String getName() {
     return "Negamax";
   }
 
   Move selectMove(List<Move> legalMoves, State state) {
-    maximisingPlayer = state.turn;
+    this.maximisingPlayer = state.turn;
+    watch.reset();
+    watch.start();
     return iterativeDeepening(legalMoves, state);
   }
 
   Move iterativeDeepening(List<Move> legalMoves, State state) {
+
     int searchDepth = 0;
     legalMoves.shuffle();
     int numRootMoves = legalMoves.length;
+
+    if (legalMoves.length == 0) {
+      print('no moves fam');
+      return null;
+    }
 
     Map<int, double> moveScores = {};
     Move bestMove = legalMoves[0];
@@ -90,6 +100,8 @@ class NegamaxAI extends AI {
         copyState.applyMove(m);
         value = -negamax(copyState, searchDepth-1, -beta, -alpha);
         // moveScores[i] = value;
+
+        if (shouldStop()) break;
 
         if (value > score) {
           score = value;
@@ -147,6 +159,8 @@ class NegamaxAI extends AI {
         alpha = value;
       }
 
+      if (shouldStop()) break;
+
 
       if (alpha >= beta)
         break;
@@ -155,11 +169,16 @@ class NegamaxAI extends AI {
     // return tt.put(hash, value, depth);
     return value;
   }
+
+  bool shouldStop() {
+    return watch.elapsed.inSeconds >= maxSeconds;
+  }
+
 }
 
 class FlatMCTSAI extends AI {
   Stopwatch watch = new Stopwatch();
-  static const int PLAYOUT_TIME_MILLIS = 1000;
+  static const int PLAYOUT_TIME = 1;
 
   String getName() {
     return "FlatMCTS";
@@ -170,7 +189,7 @@ class FlatMCTSAI extends AI {
     int counter = 0;
     watch.reset();
     watch.start();
-    while(watch.elapsedMilliseconds < PLAYOUT_TIME_MILLIS) {
+    while(watch.elapsed.inSeconds < PLAYOUT_TIME) {
       for (int j = 0; j < legalMoves.length; ++j) {
         ++counter;
         PlayoutResult result = playout(legalMoves[j], state.copy());
@@ -191,10 +210,13 @@ class FlatMCTSAI extends AI {
 
     while (!state.isGameOver()) {
       List<Move> moves = state.getLegalMoves(state.turn);
+      if (moves.length == 0) {
+        break;
+      }
       state.applyMove(moves[Random.secure().nextInt(moves.length)]);
     }
     bool didWin = false;
-    if (state.turn != wantWin) {
+    if (state.turn != wantWin || state.isGameOver()) {
       didWin = true;
     }
     return new PlayoutResult(turns, didWin);
@@ -206,4 +228,81 @@ class PlayoutResult {
   int numTurns;
   bool didWin;
   PlayoutResult(this.numTurns, this.didWin);
+}
+
+
+class UCTAI extends AI {
+
+  Stopwatch watch = new Stopwatch();
+  final int PLAYOUT_TIME = 1;
+  final double EXPLOIT = sqrt2;
+
+
+  String getName() {
+    return "UCT";
+  }
+
+  Move selectMove(List<Move> legalMoves, State state) {
+    List<StatsEntry> stats = new List.generate(legalMoves.length, (index) => StatsEntry(), growable: false);
+    int counter = 0;
+    watch.reset();
+    watch.start();
+    while(watch.elapsed.inSeconds < PLAYOUT_TIME) {
+      int index = findBest(stats, counter);
+      if (playout(legalMoves[index], state.copy()))
+        stats[index].wins += 1;
+      stats[index].attempts += 1;
+      ++counter;
+    }
+    watch.stop();
+    print('Sims completed $counter');
+    stats.sort((a, b) => a.wins.compareTo(b.wins));
+    return legalMoves[stats.indexOf(stats.reversed.toList()[0])];
+  }
+
+  int findBest(List<StatsEntry> stats, int n) {
+    int best = -1;
+    double bestScore = double.negativeInfinity;
+    for (int i = 0; i < stats.length; ++i) {
+      double score = ucb(stats, i, n);
+      if (score > bestScore) {
+        bestScore = score;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  double ucb(List<StatsEntry> stats, int i, int n) {
+    if (stats[i].attempts == 0) return double.infinity;
+    return stats[i].winRate() + EXPLOIT * sqrt(log(n) / stats[i].attempts);
+  }
+
+
+  bool playout(Move move, State state) {
+    int wantWin = state.turn;
+    state.applyMove(move);
+
+    while (!state.isGameOver()) {
+      List<Move> moves = state.getLegalMoves(state.turn);
+      if (moves.length == 0) {
+        break;
+      }
+      state.applyMove(moves[Random.secure().nextInt(moves.length)]);
+    }
+    bool didWin = false;
+    if (state.turn != wantWin || state.isGameOver()) {
+      didWin = true;
+    }
+    return didWin;
+  }
+}
+
+class StatsEntry {
+  double wins = 0;
+  double attempts = 0;
+
+  double winRate() {
+    return wins / attempts;
+  }
 }

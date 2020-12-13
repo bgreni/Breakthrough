@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:breakthrough/src/chess_board.dart';
+import 'package:breakthrough/src/ui/main_page.dart';
 
 void main() => runApp(new MyApp());
 
@@ -12,41 +12,9 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: new MyHomePage(),
+      home: new MainPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  @override
-  _MyHomePageState createState() => new _MyHomePageState();
-}
 
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ChessBoard(
-              onMove: (move) {
-                print(move);
-              },
-              onWin: (color) {
-                print(color);
-                setState(() {
-
-                });
-              },
-              size: MediaQuery.of(context).size.width,
-              enableUserMoves: true,
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}

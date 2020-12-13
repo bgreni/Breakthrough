@@ -6,14 +6,15 @@ class GameEngine {
   static const int BLACK = C.BLACK;
   static const int WHITE = C.WHITE;
 
+  // unused ATM
   static const Map<String, String> FLAGS = const {
     'NORMAL': 'n',
     'CAPTURE' : 'c'
   };
-
   static const int BITS_NORMAL = 1;
   static const int BITS_CAPTURE = 2;
 
+  // Convert board squares from the frontend to our backend representation
   static const Map SQUARES = const {
     'a8':   0, 'b8':   1, 'c8':   2, 'd8':   3, 'e8':   4, 'f8':   5, 'g8':   6, 'h8':   7,
     'a7':  8, 'b7':  9, 'c7':  10, 'd7':  11, 'e7':  12, 'f7':  13, 'g7':  14, 'h7':  15,
@@ -25,35 +26,50 @@ class GameEngine {
     'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59, 'e1': 60, 'f1': 61, 'g1': 62, 'h1': 63
   };
 
-
-
+  // Instance member stuff
   State state =  new State(new Board(), WHITE);
   List<State> history = [];
   bool gameOver = false;
-  AI ai = NegamaxAI();
+  AI ai;
+  int AIDifficulty;
 
 
-  GameEngine() {
+  GameEngine(int difficulty) {
     state.board.initBoard();
+    this.AIDifficulty = difficulty;
+    switch(this.AIDifficulty) {
+      case 1:
+        ai = RandomAI();
+        break;
+      case 3:
+        ai = FlatMCTSAI();
+        break;
+      case 2:
+        ai = NegamaxAI();
+        break;
+    }
   }
 
-
+  /// reset the game
   void reset() {
     State state =  new State(new Board(), WHITE);
     List<State> history = [];
     bool gameOver = false;
   }
 
+  /// get the piece value of a square
   Piece get(String square) {
     int boardInt = state.board.board[SQUARES[square]];
     if (boardInt == 0) return null;
     return Piece(Piece.intToColor(boardInt));
   }
 
-
+  /// Try to apply a move
+  /// returns true of the move was successful
   bool move(move) {
     Move m = null;
     if (move is Map) {
+      // frontend breaks without this part
       int from = SQUARES[move['from']];
       int to = SQUARES[move['to']];
       print('to $to : from $from');
@@ -62,40 +78,52 @@ class GameEngine {
       m = move;
     }
 
+    // obvs don't play an illegal move
     if (m == null || !state.isLegalMove(m)) return false;
-    make_move(m);
+
+    state.applyMove(m);
     if (state.isGameOver()) {
       this.gameOver = true;
     }
     return true;
   }
 
-  void make_move(Move move) {
-    state.applyMove(move);
-  }
-
+  /// Make move for the AI player
   void makeAIMove() {
     Move move = ai.selectMove(state.getLegalMoves(state.turn), state);
     print('CHOSEN AI MOVE: ${move.from} ${move.to}');
     this.move(move);
   }
 
-  int AIPlayout(AI a1, AI a2) {
+  String AIPlayout(AI a1, AI a2) {
     State s = new State(new Board(), C.WHITE);
     s.board.initBoard();
     Move m;
     while(true) {
       m = a1.selectMove(s.getLegalMoves(C.WHITE), s);
-      print('P1: $m');
-      s.applyMove(m);
-      if (s.isGameOver()) {
-        return C.WHITE;
+      if (m != null) {
+        print('P1: $m');
+        s.applyMove(m);
+        // s.board.printBoard();
+        if (s.isGameOver()) {
+          return a1.getName();
+        }
+      } else {
+        print('a1 has no moves rip');
+        return a2.getName();
       }
+
       m = a2.selectMove(s.getLegalMoves(C.BLACK), s);
-      print('P2: $m');
-      s.applyMove(m);
-      if (s.isGameOver()) {
-        return C.BLACK;
+      if (m != null) {
+        print('P2: $m');
+        s.applyMove(m);
+        // s.board.printBoard();
+        if (s.isGameOver()) {
+          return a2.getName();
+        }
+      } else {
+        print('a2 has no moves rip');
+        return a1.getName();
       }
     }
   }
@@ -240,6 +268,12 @@ class State {
       return board.topRow().contains(1) || board.bottomRow().contains(2);
     }
 
+    int winner() {
+      if (board.topRow().contains(C.WHITE)) return C.WHITE;
+      if (board.bottomRow().contains(C.BLACK)) return C.BLACK;
+      return 0;
+    }
+
     void applyMove(Move move) {
       board.apply(move);
       reverseTurn();
@@ -252,17 +286,17 @@ class State {
     List<Move> getLegalMoves(int toPlay) {
       List<Move> legalMoves = [];
       for (int i = 0; i < C.TOTAL_TILES; ++i) {
-        int player = Piece.colorToInt(toPlay);
-        if (board[i] == player) {
-          var locations = getLegalMoveIndexes(i, toPlay);
-          locations.forEach((location) {
-            if (board.legalLocation(location)) {
-              var m = new Move(turn, i, location, 0);
-              if (isLegalMove(m)) {
-                legalMoves.add(m);
-              }
-            }
-          });
+        if (board[i] == toPlay) {
+          legalMoves.addAll(legalMovesForPosition(i, toPlay));
+          // var locations = getLegalMoveIndexes(i, toPlay);
+          // locations.forEach((location) {
+          //   if (board.legalLocation(location)) {
+          //     var m = new Move(turn, i, location, 0);
+          //     if (isLegalMove(m)) {
+          //       legalMoves.add(m);
+          //     }
+          //   }
+          // });
         }
       }
       return legalMoves;

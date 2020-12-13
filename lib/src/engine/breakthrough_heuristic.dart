@@ -18,15 +18,6 @@ class Heuristic {
     int maxPieces = 0;
     int minPieces = 0;
 
-    if (state.isGameOver()) {
-      if (state.turn != maximisingPlayer) {
-        return BETA_INIT;
-      } else {
-        return ALPHA_INIT;
-      }
-
-    }
-
     for (int i = 0; i < C.TOTAL_TILES; ++i) {
       if (board[i] == maxPiece) {
         ++maxPieces;
@@ -112,6 +103,6 @@ class Heuristic {
   }
 
   bool yInRange(int y) {
-    return y > 0 && y < C.BOARD_SIZE;
+    return y >= 0 && y <= C.BOARD_SIZE - 1;
   }
 }

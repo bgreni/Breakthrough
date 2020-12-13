@@ -1,8 +1,9 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'game_engine.dart';
-import 'constants.dart' as C;
-import 'board_controller.dart';
+import '../engine/game_engine.dart';
+import '../engine/constants.dart' as C;
+import '../ui/board_controller.dart';
 
 typedef Null MoveCallback(String moveNotation);
 typedef Null OnWinCallBack(String string);
@@ -27,7 +28,16 @@ class BoardModel extends Model {
   bool enableUserMoves;
 
   /// Creates a logical game
-  GameEngine game = new GameEngine();
+  GameEngine game;
+
+  /// Difficulty level
+  int difficulty;
+
+  /// Whether AI is enabled
+  bool enableAI;
+
+  /// The color the human is playing
+  String playerColor;
 
   /// Refreshes board
   void refreshBoard() {
@@ -44,8 +54,16 @@ class BoardModel extends Model {
       this.onWin,
       this.whiteSideTowardsUser,
       this.boardController,
-      this.enableUserMoves) {
+      this.enableUserMoves,
+      this.difficulty,
+      this.enableAI,
+      this.playerColor,
+      ) {
+    game = new GameEngine(this.difficulty);
     boardController?.game = game;
     boardController?.refreshBoard = refreshBoard;
+    if (this.enableAI && this.playerColor == 'Black') {
+      game.makeAIMove();
+    }
   }
 }

@@ -106,12 +106,6 @@ class ChessBoard extends StatefulWidget {
   /// Callback for when a player is checkmated
   final OnWinCallBack onWin;
 
-  /// Callback for when a player is in check
-  // final CheckCallback onCheck;
-
-  /// Callback for when the game is a draw
-  // final VoidCallback onDraw;
-
   /// A boolean which notes if white board side is towards users
   final bool whiteSideTowardsUser;
 
@@ -124,6 +118,15 @@ class ChessBoard extends StatefulWidget {
   /// The color type of the board
   final BoardType boardType;
 
+  /// Difficulty level
+  final int difficulty;
+
+  /// Whether AI is enabled
+  final bool enableAI;
+
+  /// The color the human is playing
+  final String playerColor;
+
   ChessBoard({
     this.size = 200.0,
     this.whiteSideTowardsUser = true,
@@ -132,6 +135,9 @@ class ChessBoard extends StatefulWidget {
     this.boardController,
     this.enableUserMoves = true,
     this.boardType = BoardType.brown,
+    @required this.difficulty,
+    @required this.enableAI,
+    @required this.playerColor
   });
 
   @override
@@ -151,6 +157,9 @@ class _ChessBoardState extends State<ChessBoard> {
         widget.whiteSideTowardsUser,
         widget.boardController,
         widget.enableUserMoves,
+        widget.difficulty,
+        widget.enableAI,
+        widget.playerColor,
       ),
       child: Container(
         height: widget.size,
