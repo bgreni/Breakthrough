@@ -1,3 +1,4 @@
+
 import '../constants.dart' as C;
 import 'AI.dart';
 import '../game_engine.dart';
@@ -22,11 +23,11 @@ class Heuristic {
       if (board[i] == maxPiece) {
         ++maxPieces;
         // value of having the piece on the board
-        boardValue += getValOfSquare(i, state, maximisingPlayer);
+        boardValue += getValOfSquare(i, state, maxPiece);
       } else if (board[i] == minPiece) {
         ++minPieces;
         // for opponent stuff
-        boardValue -= getValOfSquare(i, state, maximisingPlayer);
+        boardValue -= getValOfSquare(i, state, minPiece);
       }
     }
     if (maxPieces == 0) {
@@ -38,29 +39,29 @@ class Heuristic {
     return boardValue;
   }
 
-  double getPieceValue(int i, State state) {
+  double getPieceValue(int i, State state, int player) {
     double value = PIECE_VALUE;
-    Point p = state.board.IntToCoord(i);
-    value += connected(p, state.board);
-    value += state.legalMovesForPosition(i, state.turn).length;
+    // Point p = state.board.IntToCoord(i);
+    // value += connected(p, state.board);
+    value += state.legalMovesForPosition(i, player).length;
 
     return value;
   }
 
-  double getValOfSquare(int i, State state, int maximisingPlayer) {
+  double getValOfSquare(int i, State state, int player) {
     double total = 0;
     Board board = state.board;
-    total += getPieceValue(i, state);
+    total += getPieceValue(i, state, player);
 
     // bonus of piece being close to winning
     Point p = board.IntToCoord(i);
-    // total += closeToWin(p, maximisingPlayer, board);
+    total += closeToWin(p, player, board);
 
     // capture danger bonus
-    total += captureDanger(p, maximisingPlayer, board);
+    total += captureDanger(p, player, board);
 
     // bonus for being home ground
-    total += homeGround(p, maximisingPlayer);
+    total += homeGround(p, player);
 
     return total;
   }
@@ -93,8 +94,8 @@ class Heuristic {
 
   double captureDanger(Point point, int toPlay, Board board) {
     int modifier = toPlay == C.WHITE ? -1 : 1;
-    int player = board.get(point.x, point.y);
-    int opponent = player == 1 ? 2 : 1;
+    int player = toPlay;
+    int opponent = State.opponent(player);
     int modifiedy = point.y + modifier;
     if ((point.x > 0 && yInRange(modifiedy) && board.get(point.x-1, modifiedy) == opponent) ||
         (point.x < C.BOARD_SIZE - 1 && yInRange(modifiedy) && board.get(point.x+1, modifiedy) == opponent))

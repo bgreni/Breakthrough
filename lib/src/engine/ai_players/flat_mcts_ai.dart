@@ -2,9 +2,11 @@ import 'AI.dart';
 import '../game_engine.dart';
 import 'dart:math';
 
+
+/// TODO: I'm not sure if this even counts as a proper flat mcts
 class FlatMCTSAI extends AI {
   Stopwatch watch = new Stopwatch();
-  static const int PLAYOUT_TIME = 10;
+  static const int PLAYOUT_TIME = 1;
 
   String getName() {
     return "FlatMCTS";
@@ -42,7 +44,7 @@ class FlatMCTSAI extends AI {
       state.applyMove(moves[Random.secure().nextInt(moves.length)]);
     }
     bool didWin = false;
-    if (state.turn != wantWin || state.isGameOver()) {
+    if (wantWin == state.winner()) {
       didWin = true;
     }
     return new PlayoutResult(turns, didWin);

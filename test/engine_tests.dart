@@ -9,7 +9,7 @@ void main() {
 }
 
 void testAI() {
-  final int MAX_ITERATIONS = 1;
+  final int MAX_ITERATIONS = 4;
   GameEngine engine = new GameEngine(1);
   AI a1 = new FlatMCTSAI();
   AI a2  = new NegamaxAI();

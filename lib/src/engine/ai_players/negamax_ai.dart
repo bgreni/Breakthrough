@@ -3,10 +3,11 @@ import '../game_engine.dart';
 
 
 /// Negamax player using iterative deepening
+/// TODO: I think the algorithm is implemented correctly, but my heuristic sucks so it doesn't play very well possibly pruning too hard because it runs way too fast
 class NegamaxAI extends AI {
-  int maxDepth = 5;
+  int maxDepth = 10;
   bool searchedFullTree = false;
-  int maxSeconds = 5;
+  int maxSeconds = 1;
   Stopwatch watch = new Stopwatch();
 
 
@@ -34,24 +35,29 @@ class NegamaxAI extends AI {
 
     Map<int, double> moveScores = {};
     Move bestMove = legalMoves[0];
+    Move bestMoveCompleted;
+
     while (searchDepth < this.maxDepth) {
       ++searchDepth;
 
-      double score = AI.ALPHA_INIT;
+      double score = 0;
       double alpha = AI.ALPHA_INIT;
       double beta = AI.BETA_INIT;
-      double value = 1;
+      double value;
 
       for (int i = 0; i < numRootMoves; ++i) {
         State copyState = state.copy();
         Move m = legalMoves[i];
         copyState.applyMove(m);
-        value = -negamax(copyState, searchDepth-1, -beta, -alpha);
+        value = -negamax(copyState, searchDepth-1, -beta, -alpha, State.opponent(this.maximisingPlayer));
         // moveScores[i] = value;
-
-        if (shouldStop()) break;
+        if (shouldStop()) {
+          bestMove = null;
+          break;
+        }
 
         if (value > score) {
+          // print('value: $value : score: $score');
           score = value;
           bestMove = m;
         }
@@ -70,6 +76,8 @@ class NegamaxAI extends AI {
         } else if (score == AI.ALPHA_INIT) {
           print('Loss proven at depth $searchDepth');
           return bestMove;
+        } else {
+          bestMoveCompleted = bestMove;
         }
       }
 
@@ -77,10 +85,10 @@ class NegamaxAI extends AI {
       // moveScores = {};
     }
     print('Completed search of depth $searchDepth');
-    return bestMove;
+    return bestMoveCompleted;
   }
 
-  double negamax(State state, int depth, double alpha, double beta) {
+  double negamax(State state, int depth, double alpha, double beta, int maximisingPlayer) {
 
     // int hash = hasher.doHash(state.board.board);
     //
@@ -89,7 +97,7 @@ class NegamaxAI extends AI {
     // }
 
     if (state.isGameOver() || depth == 0) {
-      double eval = staticallyEvaluate(state);
+      double eval = staticallyEvaluate(state, maximisingPlayer);
       return eval;
       // return tt.put(hash, eval, depth);
     }
@@ -101,7 +109,7 @@ class NegamaxAI extends AI {
       State copyState = state.copy();
       Move m = legalMoves[i];
       copyState.applyMove(m);
-      value = -negamax(copyState, depth - 1, -beta, -alpha);
+      value = -negamax(copyState, depth - 1, -beta, -alpha, State.opponent(maximisingPlayer));
 
       if (value > alpha) {
         alpha = value;

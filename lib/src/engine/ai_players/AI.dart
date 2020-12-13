@@ -20,20 +20,20 @@ abstract class AI {
   Move selectMove(List<Move> legalMoves, State state);
   String getName();
 
-  double staticallyEvaluate(State state) {
+  double staticallyEvaluate(State state, int maximisingPlayer) {
     int winner = state.winner();
-    if (winner != this.maximisingPlayer && winner != 0) {
-      return BETA_INIT;
-    }
-
-    if (state.winner() == this.maximisingPlayer) {
+    if (winner != maximisingPlayer && winner != 0) {
       return ALPHA_INIT;
     }
 
-    int maxPiece = state.turn != this.maximisingPlayer ? 1 : 2;
+    if (state.winner() == maximisingPlayer) {
+      return BETA_INIT;
+    }
+
+    int maxPiece = maximisingPlayer;
     int minPiece = maxPiece == 1 ? 2 : 1;
 
-    return heuristic.evalHeuristic(state, maxPiece, minPiece, this.maximisingPlayer);
+    return heuristic.evalHeuristic(state, maxPiece, minPiece, maximisingPlayer);
   }
 }
 

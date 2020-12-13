@@ -2,6 +2,7 @@ import 'AI.dart';
 import '../game_engine.dart';
 import 'dart:math';
 
+/// TODO: Same as flatmcts I'm not sure if this is done right, although this one gets destoyed by flat mcts so something is wrong
 class UCTAI extends AI {
 
   Stopwatch watch = new Stopwatch();
@@ -62,7 +63,7 @@ class UCTAI extends AI {
       state.applyMove(moves[Random.secure().nextInt(moves.length)]);
     }
     bool didWin = false;
-    if (state.turn != wantWin || state.isGameOver()) {
+    if (wantWin == state.winner()) {
       didWin = true;
     }
     return didWin;

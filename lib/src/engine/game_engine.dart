@@ -60,6 +60,7 @@ class GameEngine {
   /// get the piece value of a square
   Piece get(String square) {
     int boardInt = state.board.board[SQUARES[square]];
+    // no piece ont his square
     if (boardInt == 0) return null;
     return Piece(Piece.intToColor(boardInt));
   }
@@ -95,11 +96,14 @@ class GameEngine {
     this.move(move);
   }
 
+  /// Play a game with two AI players, used only for testing
   String AIPlayout(AI a1, AI a2) {
     State s = new State(new Board(), C.WHITE);
     s.board.initBoard();
     Move m;
     while(true) {
+
+      // make a move for white
       m = a1.selectMove(s.getLegalMoves(C.WHITE), s);
       if (m != null) {
         print('P1: $m');
@@ -109,10 +113,12 @@ class GameEngine {
           return a1.getName();
         }
       } else {
+        // automatic loss if white has no moves to play
         print('a1 has no moves rip');
         return a2.getName();
       }
 
+      // make a move for black
       m = a2.selectMove(s.getLegalMoves(C.BLACK), s);
       if (m != null) {
         print('P2: $m');
@@ -122,6 +128,7 @@ class GameEngine {
           return a2.getName();
         }
       } else {
+        // automatic loss for black is no moves to play
         print('a2 has no moves rip');
         return a1.getName();
       }
@@ -130,6 +137,7 @@ class GameEngine {
 }
 
 
+/// This is really only used to pass information to the frontend
 class Piece {
   final int color;
   PieceType type;
@@ -159,18 +167,21 @@ enum PieceType {
   EMPTY
 }
 
+/// All the information need about a particular move
 class Move {
   final int color;
-  final int from;
-  final int to;
-  final int flags;
+  final int from;  // the square we want to move away from
+  final int to;    // the square we want to move to
+  final int flags; // currently unused
   const Move(this.color, this.from, this.to, this.flags);
   toString() {
     return '$color plays $from to $to';
   }
 }
 
+/// Game board representation
 class Board {
+  // 1D representation of the game board
   List<int> board = new List(C.BOARD_SIZE * C.BOARD_SIZE);
 
   operator [](index) => board[index];
@@ -179,6 +190,7 @@ class Board {
     return board.sublist(start, end);
   }
 
+  /// get the value of a square using x and y coordinates
   int get(int x, int y) {
     return board[coordToInt(x, y)];
   }
@@ -236,6 +248,7 @@ class Board {
       return -1;
   }
 
+  /// deep copy of the board (I think)
   Board copy() {
     return new Board()
       ..board = new List<int>.from(this.board);
@@ -255,19 +268,27 @@ class Board {
 
 }
 
+/// Representation of the state of a particular instance of the game
 class State {
-    Board board;
-    int turn;
+    Board board;  // state of the board
+    int turn;     // who's to play
     State(this.board, this.turn);
 
     void reverseTurn() {
       turn = turn == C.WHITE ? C.BLACK : C.WHITE;
     }
 
+    static int opponent(int color) {
+      return color == C.WHITE ? C.BLACK : C.WHITE;
+    }
+
+    /// White has made it to the top row, or black has made it to the bottom row
     bool isGameOver() {
       return board.topRow().contains(1) || board.bottomRow().contains(2);
     }
 
+    /// returns the winning color
+    /// return 0 if there is no winner
     int winner() {
       if (board.topRow().contains(C.WHITE)) return C.WHITE;
       if (board.bottomRow().contains(C.BLACK)) return C.BLACK;
@@ -283,63 +304,65 @@ class State {
       return new State(board.copy(), turn);
     }
 
+    /// Returns all the legal moves for a given color
     List<Move> getLegalMoves(int toPlay) {
       List<Move> legalMoves = [];
       for (int i = 0; i < C.TOTAL_TILES; ++i) {
         if (board[i] == toPlay) {
           legalMoves.addAll(legalMovesForPosition(i, toPlay));
-          // var locations = getLegalMoveIndexes(i, toPlay);
-          // locations.forEach((location) {
-          //   if (board.legalLocation(location)) {
-          //     var m = new Move(turn, i, location, 0);
-          //     if (isLegalMove(m)) {
-          //       legalMoves.add(m);
-          //     }
-          //   }
-          // });
         }
       }
       return legalMoves;
     }
 
+    /// Returns the board position indexes of the the possibly legal
+    /// moves for a given position and color
     List<int> getLegalMoveIndexes(int location, int toPlay) {
-      int bs;
+      int verticalModifier;
+      // White can only move up, and black can only move down
       if (toPlay == C.WHITE) {
-        bs = -C.BOARD_SIZE;
+        verticalModifier = -C.BOARD_SIZE;
       } else {
-        bs = C.BOARD_SIZE;
+        verticalModifier = C.BOARD_SIZE;
       }
 
       if (board.IntToCoord(location).x == 0) {
         return [
-          location + bs,
-          location + bs + 1,
+          location + verticalModifier,
+          location + verticalModifier + 1,
         ];
       } else if (board.IntToCoord(location).x == C.BOARD_SIZE - 1) {
         return [
-          location + bs,
-          location + bs - 1,
+          location + verticalModifier,
+          location + verticalModifier - 1,
         ];
       }
       return [
-        location + bs,
-        location + bs - 1,
-        location + bs + 1,
+        location + verticalModifier,
+        location + verticalModifier - 1,
+        location + verticalModifier + 1,
       ];
     }
 
+    /// returns true if the move would capture an enemy piece directly in front
+    /// of it
     bool isIllegalCapture(Move move) {
       int diff = move.to - move.from;
       return diff.abs() == C.BOARD_SIZE && board[move.to] != C.EMPTY;
     }
 
+    /// returns true of the move is a legal move
     bool isLegalMove(Move move) {
       if (isIllegalCapture(move) ||
+          // trying to move a piece you don't own
           board[move.from] != Piece.colorToInt(turn) ||
+          // trying to move to a square you already have a piece in
           board[move.from] == board[move.to]) return false;
+      // check that move.to is a legal board position for move.from to move to
       return getLegalMoveIndexes(move.from, move.color).contains(move.to);
     }
 
+    /// returns all the legal moves for a given position and color
     List<Move> legalMovesForPosition(int position, int toPlay) {
       List<Move> moves = [];
       getLegalMoveIndexes(position, toPlay).forEach((location) {
