@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:breakthrough/src/engine/AI.dart';
+import 'package:breakthrough/src/engine/ai_players.dart';
 import 'package:breakthrough/src/engine/game_engine.dart';
 import 'package:breakthrough/src/engine/constants.dart' as C;
 

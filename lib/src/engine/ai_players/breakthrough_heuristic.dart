@@ -1,6 +1,6 @@
-import 'constants.dart' as C;
+import '../constants.dart' as C;
 import 'AI.dart';
-import 'game_engine.dart';
+import '../game_engine.dart';
 
 class Heuristic {
   static const double ALPHA_INIT = double.negativeInfinity;

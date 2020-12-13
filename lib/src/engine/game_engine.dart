@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'constants.dart' as C;
-import 'AI.dart';
+import 'ai_players.dart';
 
 class GameEngine {
   static const int BLACK = C.BLACK;
