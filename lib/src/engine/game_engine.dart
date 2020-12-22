@@ -41,11 +41,11 @@ class GameEngine {
       case 1:
         ai = RandomAI();
         break;
-      case 3:
+      case 2:
         ai = FlatMCTSAI();
         break;
-      case 2:
-        ai = NegamaxAI();
+      case 3:
+        ai = NegamaxAI(C.WANDERER_HEURISTIC);
         break;
     }
   }
@@ -106,7 +106,7 @@ class GameEngine {
       // make a move for white
       m = a1.selectMove(s.getLegalMoves(C.WHITE), s);
       if (m != null) {
-        print('P1: $m');
+        print('${a1.getName()}: $m');
         s.applyMove(m);
         // s.board.printBoard();
         if (s.isGameOver()) {
@@ -121,7 +121,7 @@ class GameEngine {
       // make a move for black
       m = a2.selectMove(s.getLegalMoves(C.BLACK), s);
       if (m != null) {
-        print('P2: $m');
+        print('${a2.getName()}: $m');
         s.applyMove(m);
         // s.board.printBoard();
         if (s.isGameOver()) {
@@ -246,6 +246,10 @@ class Board {
       if (x >= 0 && y >= 0 && x < C.BOARD_SIZE && y < C.BOARD_SIZE)
         return (C.BOARD_SIZE) * x + y;
       return -1;
+  }
+
+  static bool isValidPoint(int x, int y) {
+    return (x >= 0 && x < C.BOARD_SIZE) && (y >= 0 && y < C.BOARD_SIZE);
   }
 
   /// deep copy of the board (I think)
@@ -381,6 +385,11 @@ class Point {
   int x;
   int y;
   Point(this.x, this.y);
+
+  double distance(Point other) {
+    return sqrt(pow((this.x - other.x), 2).toDouble() + pow(this.y - other.y, 2).toDouble());
+  }
+
   @override
   String toString() {
     return 'x: $x ; y: $y';

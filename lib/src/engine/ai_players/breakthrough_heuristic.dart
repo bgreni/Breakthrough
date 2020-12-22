@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import '../constants.dart' as C;
 import 'AI.dart';
 import '../game_engine.dart';
@@ -13,6 +15,36 @@ class Heuristic {
   static const double CONNECTED_HVAL = 35;
   static const double CONNECTED_VVAL = 15;
 
+  static const List<double> BOARD_SQUARE_VALS = [
+    5, 28, 28, 12, 12, 28, 28, 5,
+    2, 3, 3, 3, 3, 3, 3, 2,
+    3, 5 , 10, 10, 10, 10, 5, 3,
+    6, 9, 16, 16, 16, 16, 9, 6,
+    9, 15, 21, 21, 21, 21, 15, 9,
+    14, 22, 22, 22, 22, 22, 22, 14,
+    21, 23, 23, 23, 23, 23, 23, 21,
+    24, 24, 24, 24, 24, 24, 24, 24
+  ];
+
+  final String type;
+
+  Heuristic(this.type);
+
+
+  // static const SIDE_PROX_VALS = [1.3199687, 1.6717433];
+  // static const CENTER_PROX_VALS = [-0.60074246, 2.1167464];
+  // static const double PIECE_WEIGHT = 1.0;
+  // static const double MOBILITY = 0.19138491;
+  // static const END_REGION_WHITE = [-0.029624522, 1.5196275];
+  // static const END_REGION_BLACK = [1.3905222, 0.9268772];
+  // final CENTER_P = new Point(4, 4);
+  //
+  // static const double MAX_DIST = 1;
+
+  static const double PIECE = 10;
+
+
+
   double evalHeuristic(State state, int maxPiece, int minPiece, int maximisingPlayer) {
     double boardValue = 0;
     Board board = state.board;
@@ -23,11 +55,20 @@ class Heuristic {
       if (board[i] == maxPiece) {
         ++maxPieces;
         // value of having the piece on the board
-        boardValue += getValOfSquare(i, state, maxPiece);
+        if (this.type == C.ARTICLE_HEURISTIC) {
+          boardValue += getValOfSquare(i, state, maxPiece);
+        } else {
+          boardValue += computeTerms(i, maxPiece, state);
+        }
       } else if (board[i] == minPiece) {
         ++minPieces;
+
         // for opponent stuff
-        boardValue -= getValOfSquare(i, state, minPiece);
+        if (this.type == C.ARTICLE_HEURISTIC) {
+          boardValue -= getValOfSquare(i, state, maxPiece);
+        } else {
+          boardValue -= computeTerms(i, maxPiece, state);
+        }
       }
     }
     if (maxPieces == 0) {
@@ -38,6 +79,119 @@ class Heuristic {
 
     return boardValue;
   }
+
+  double computeTerms(int location, int player, State state) {
+    double total = 0;
+    Point p = state.board.IntToCoord(location);
+    total += PIECE;
+    double squareValue = getSquareValue(location, player);
+    total += squareValue;
+    total += breakthroughBonus(p, player, state.board, State.opponent(player));
+    if (!isInDanger(p, player, state.board))
+      total += squareValue * 0.5;
+    total += connected(p, state.board) / 10;
+
+
+    // total += computeSidesProximity(p.x, player);
+    // total += computerCenterProximity(p, player);
+    // total += computeMobility(location, player, state);
+    // total += PIECE_WEIGHT;
+    // total += computeEndRegion(p.y, player);
+    return total;
+  }
+
+  bool isInDanger(Point p, int player, Board board) {
+    int yModifier = player == C.WHITE ? -1 : 1;
+    int opponent = State.opponent(player);
+    if (Board.isValidPoint(p.x - 1, p.y + yModifier) && board.get(p.x - 1, p.y + yModifier) == opponent)
+      return true;
+    if (Board.isValidPoint(p.x + 1, p.y + yModifier) && board.get(p.x + 1, p.y + yModifier) == opponent)
+      return true;
+    return false;
+  }
+
+  double breakthroughBonus(Point p, int player, Board board, int opponent) {
+    double count = 0;
+    int yModifier = player == C.WHITE ? -1 : 1;
+    for (int i = p.y + yModifier; i > p.y + (yModifier * 3); --i) {
+      for (int j = p.x - 1; j < p.x + 2; ++j) {
+        if (Board.isValidPoint(j, i) && board.get(j, i) != opponent)
+          ++count;
+      }
+    }
+    return count;
+  }
+
+
+  double getSquareValue(int location, int player) {
+    if (player == C.BLACK)
+      return BOARD_SQUARE_VALS[location];
+    return BOARD_SQUARE_VALS.reversed.toList()[location];
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // double computeSidesProximity(int x, int player) {
+  //   double distance = min(x, C.BOARD_SIZE - x).toDouble();
+  //   return SIDE_PROX_VALS[player - 1] * (1.0 - distance / MAX_DIST);
+  // }
+  //
+  // double computerCenterProximity(Point p, int player) {
+  //   double distance = p.distance(CENTER_P);
+  //   return CENTER_PROX_VALS[player - 1] * (1.0 - distance / MAX_DIST);
+  // }
+  //
+  // double computeMobility(int location, int player, State state) {
+  //   return MOBILITY * state.legalMovesForPosition(location, player).length;
+  // }
+  //
+  // double computeEndRegion(int y, int player) {
+  //   double total = 0;
+  //   total += END_REGION_WHITE[player - 1] * (1.0 - (C.BOARD_SIZE - y / MAX_DIST));
+  //   return total + END_REGION_BLACK[player - 1] * (1.0 - (y / MAX_DIST));
+  // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   double getPieceValue(int i, State state, int player) {
     double value = PIECE_VALUE;

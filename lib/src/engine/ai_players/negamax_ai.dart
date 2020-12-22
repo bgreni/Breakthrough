@@ -6,13 +6,18 @@ import '../game_engine.dart';
 /// TODO: I think the algorithm is implemented correctly, but my heuristic sucks so it doesn't play very well possibly pruning too hard because it runs way too fast
 class NegamaxAI extends AI {
   int maxDepth = 10;
-  bool searchedFullTree = false;
+  bool searchedFullTree = true;
   int maxSeconds = 1;
   Stopwatch watch = new Stopwatch();
+  String heuristicType;
+
+  NegamaxAI(String heuristicType) : super(heuristicType) {
+    this.heuristicType = heuristicType;
+  }
 
 
   String getName() {
-    return "Negamax";
+    return "Negamax : $heuristicType";
   }
 
   Move selectMove(List<Move> legalMoves, State state) {
@@ -40,16 +45,18 @@ class NegamaxAI extends AI {
     while (searchDepth < this.maxDepth) {
       ++searchDepth;
 
-      double score = 0;
+      double score = AI.ALPHA_INIT;
       double alpha = AI.ALPHA_INIT;
       double beta = AI.BETA_INIT;
       double value;
+
+      searchedFullTree = true;
 
       for (int i = 0; i < numRootMoves; ++i) {
         State copyState = state.copy();
         Move m = legalMoves[i];
         copyState.applyMove(m);
-        value = -negamax(copyState, searchDepth-1, -beta, -alpha, State.opponent(this.maximisingPlayer));
+        value = -negamax(copyState, searchDepth-1, -beta, -alpha, State.opponent(state.turn));
         // moveScores[i] = value;
         if (shouldStop()) {
           bestMove = null;
@@ -76,10 +83,18 @@ class NegamaxAI extends AI {
         } else if (score == AI.ALPHA_INIT) {
           print('Loss proven at depth $searchDepth');
           return bestMove;
+        } else if (searchedFullTree) {
+          print(
+              'Completed search of depth $searchDepth (no proven win or loss');
         } else {
           bestMoveCompleted = bestMove;
         }
       }
+      // } else {
+      //   --searchDepth;
+      // }
+
+      if (shouldStop()) break;
 
       // legalMoves.sort((m1, m2) => moveScores[legalMoves.indexOf(m1)].compareTo(moveScores[legalMoves.indexOf(m2)]));
       // moveScores = {};
@@ -95,9 +110,13 @@ class NegamaxAI extends AI {
     // if (tt.contains(hash) && tt[hash].depth >= depth) {
     //   return tt[hash].value;
     // }
+    if (state.isGameOver()) {
+      return staticallyEvaluate(state, maximisingPlayer);
+    }
 
-    if (state.isGameOver() || depth == 0) {
+    if (depth == 0 || shouldStop()) {
       double eval = staticallyEvaluate(state, maximisingPlayer);
+      searchedFullTree = false;
       return eval;
       // return tt.put(hash, eval, depth);
     }
@@ -111,12 +130,12 @@ class NegamaxAI extends AI {
       copyState.applyMove(m);
       value = -negamax(copyState, depth - 1, -beta, -alpha, State.opponent(maximisingPlayer));
 
+
+      if (shouldStop()) break;;
+
       if (value > alpha) {
         alpha = value;
       }
-
-      if (shouldStop()) break;
-
 
       if (alpha >= beta)
         break;

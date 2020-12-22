@@ -7,3 +7,5 @@ const int WHITE = 1;
 const int BLACK = 2;
 const int EMPTY = 0;
 const int INT32_MAX_VALUE = 2147483647;
+const String WANDERER_HEURISTIC = 'WANDERER';
+const String ARTICLE_HEURISTIC = 'ARTICLE';

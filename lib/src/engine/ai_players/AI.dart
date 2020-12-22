@@ -14,7 +14,11 @@ abstract class AI {
 
   TranspositionTable tt = new TranspositionTable();
   ZobristHash hasher = new ZobristHash();
-  Heuristic heuristic = new Heuristic();
+  Heuristic heuristic;
+
+  AI([String heuristicType]) {
+    this.heuristic = new Heuristic(heuristicType);
+  }
 
 
   Move selectMove(List<Move> legalMoves, State state);

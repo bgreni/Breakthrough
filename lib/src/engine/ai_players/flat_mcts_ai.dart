@@ -7,6 +7,8 @@ import 'dart:math';
 class FlatMCTSAI extends AI {
   Stopwatch watch = new Stopwatch();
   static const int PLAYOUT_TIME = 1;
+  int totalSimMoves = 0;
+  int totalMovesMade = 0;
 
   String getName() {
     return "FlatMCTS";
@@ -20,6 +22,7 @@ class FlatMCTSAI extends AI {
     while(watch.elapsed.inSeconds < PLAYOUT_TIME) {
       for (int j = 0; j < legalMoves.length; ++j) {
         ++counter;
+        // ++this.totalMovesMade;
         PlayoutResult result = playout(legalMoves[j], state.copy());
         if (result.didWin) {
           wins[j] += 1;
@@ -37,6 +40,7 @@ class FlatMCTSAI extends AI {
     state.applyMove(move);
 
     while (!state.isGameOver()) {
+      // ++this.totalSimMoves;
       List<Move> moves = state.getLegalMoves(state.turn);
       if (moves.length == 0) {
         break;
@@ -48,6 +52,10 @@ class FlatMCTSAI extends AI {
       didWin = true;
     }
     return new PlayoutResult(turns, didWin);
+  }
+
+  double averageSimMoves() {
+    return this.totalSimMoves.toDouble() / this.totalMovesMade.toDouble();
   }
 
 }
