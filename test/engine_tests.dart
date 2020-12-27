@@ -1,12 +1,13 @@
 import 'dart:math';
 
 import 'package:breakthrough/src/engine/ai_players.dart';
+import 'package:breakthrough/src/engine/ai_players/wanderer_ai.dart';
 import 'package:breakthrough/src/engine/game_engine.dart';
 import 'package:breakthrough/src/engine/constants.dart' as C;
 
 void main() {
-  // testAI();
-  bigTest();
+  testAI();
+  // bigTest();
 }
 
 void bigTest() {
@@ -58,10 +59,12 @@ void bigTest() {
 }
 
 void testAI() {
-  final int MAX_ITERATIONS = 3;
+  final int MAX_ITERATIONS = 1;
   GameEngine engine = new GameEngine(1);
   AI a1 = new FlatMCTSAI();
-  // FlatMCTSAI a1 = new FlatMCTSAI();
+  // AI a2 = new UCTAI();
+  // AI a2 = new WandererAI(C.WANDERER_HEURISTIC);
+  // AI a1 = new NegamaxAI(C.ARTICLE_HEURISTIC);
   AI a2  = new NegamaxAI(C.WANDERER_HEURISTIC);
   Map<String, int> wins = {
     a1.getName(): 0,

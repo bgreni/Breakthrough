@@ -14,10 +14,10 @@ abstract class AI {
 
   TranspositionTable tt = new TranspositionTable();
   ZobristHash hasher = new ZobristHash();
-  Heuristic heuristic;
+  BaseHeuristic heuristic;
 
   AI([String heuristicType]) {
-    this.heuristic = new Heuristic(heuristicType);
+    this.heuristic = HeuristicBuilder.build(heuristicType);
   }
 
 
@@ -37,7 +37,7 @@ abstract class AI {
     int maxPiece = maximisingPlayer;
     int minPiece = maxPiece == 1 ? 2 : 1;
 
-    return heuristic.evalHeuristic(state, maxPiece, minPiece, maximisingPlayer);
+    return heuristic.evalHeuristic(state, maxPiece, minPiece);
   }
 }
 

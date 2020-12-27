@@ -1,7 +1,10 @@
+import 'package:breakthrough/src/engine/ai_players/breakthrough_heuristic.dart';
+
 import 'AI.dart';
 import '../game_engine.dart';
-import 'uct_ai.dart';
 import 'dart:math';
+import 'node.dart';
+
 
 /// Based off of the AI player described in this paper https://scholarworks.calstate.edu/downloads/1z40kw957
 
@@ -19,13 +22,13 @@ class WandererAI extends AI {
   }
 
   Move selectMove(List<Move> legalMoves, State state) {
-    Node root = new Node(null, state.turn, state.copy());
+    WandererNode root = new WandererNode(null, state.turn, state.copy());
 
     int counter = 0;
     watch.reset();
     watch.start();
     while (watch.elapsed.inSeconds < PLAYOUT_TIME) {
-      Node node = root;
+      WandererNode node = root;
 
       while (node.allChildrenExpanded()) {
         node = node.children[node.bestChild()];
@@ -37,8 +40,8 @@ class WandererAI extends AI {
         node.expand();
       }
 
-      int result = node.playout(node.state.copy());
-      node.backProp(result == root.turn);
+      double result = node.playout(node.state.copy());
+      node.backProp(new PlayoutResult(result));
 
       ++counter;
     }
