@@ -119,10 +119,11 @@ class ChessBoard extends StatefulWidget {
   final BoardType boardType;
 
   /// Difficulty level
-  final int difficulty;
+  final int a1difficulty;
+  final int a2difficulty;
 
   /// Whether AI is enabled
-  final bool enableAI;
+  final String enableAI;
 
   /// The color the human is playing
   final String playerColor;
@@ -133,9 +134,10 @@ class ChessBoard extends StatefulWidget {
     @required this.onMove,
     @required this.onWin,
     this.boardController,
-    this.enableUserMoves = true,
+    this.enableUserMoves,
     this.boardType = BoardType.brown,
-    @required this.difficulty,
+    @required this.a1difficulty,
+    @required this.a2difficulty,
     @required this.enableAI,
     @required this.playerColor
   });
@@ -157,7 +159,8 @@ class _ChessBoardState extends State<ChessBoard> {
         widget.whiteSideTowardsUser,
         widget.boardController,
         widget.enableUserMoves,
-        widget.difficulty,
+        widget.a1difficulty,
+        widget.a2difficulty,
         widget.enableAI,
         widget.playerColor,
       ),

@@ -5,7 +5,8 @@ class AppSettings {
   static const String BOARD_TYPE = "BOARD_TYPE";
   static const String DEFAULT_BOARD_TYPE = "Brown";
 
-  static const String DIFFICULTY = "DIFFICULTY";
+  static const String A1DIFFICULTY = "A1DIFFICULTY";
+  static const String A2DIFFICULTY = "A2DIFFICULTY";
   static const int DEFAULT_DIFFICULTY = 1;
 
   static Future<String> getBoardType() async {
@@ -18,13 +19,23 @@ class AppSettings {
     return prefs.setString(BOARD_TYPE, type);
   }
 
-  static Future<int> getDifficulty() async {
+  static Future<int> getA1Difficulty() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(DIFFICULTY) ?? DEFAULT_DIFFICULTY;
+    return prefs.getInt(A1DIFFICULTY) ?? DEFAULT_DIFFICULTY;
   }
 
-  static Future<bool> setDifficulty(int value) async {
+  static Future<bool> setA1Difficulty(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(DIFFICULTY, value);
+    return prefs.setInt(A1DIFFICULTY, value);
+  }
+
+  static Future<int> getA2Difficulty() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(A2DIFFICULTY) ?? DEFAULT_DIFFICULTY;
+  }
+
+  static Future<bool> setA2Difficulty(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(A2DIFFICULTY, value);
   }
 }

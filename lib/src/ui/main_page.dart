@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,8 +14,9 @@ class MainPage extends StatefulWidget {
 class MainPageState extends State<MainPage> {
 
   String selectedBoardType;
-  int difficulty;
-  bool enableAI = true;
+  int a1difficulty;
+  int a2difficulty;
+  String enableAI = "true";
   String playerColor = 'White';
 
   @override
@@ -25,10 +27,15 @@ class MainPageState extends State<MainPage> {
         selectedBoardType = val;
       });
     });
-    AppSettings.getDifficulty().then((val){
+    AppSettings.getA1Difficulty().then((val) {
       setState(() {
-        difficulty = val;
+        a1difficulty = val;
       });
+    });
+      AppSettings.getA2Difficulty().then((val){
+        setState(() {
+          a2difficulty = val;
+        });
     });
   }
 
@@ -43,7 +50,8 @@ class MainPageState extends State<MainPage> {
             EnableAIButton(),
             SwitchPlayerColor(),
             PickBoardList(),
-            SetDifficultyButton()
+            SetDifficultyButton(),
+            SetAI2DifficultyButton()
           ],
         )
       )
@@ -54,11 +62,17 @@ class MainPageState extends State<MainPage> {
     return Padding(
       padding: EdgeInsets.all(10.0),
       child: new CupertinoButton(
-      child: new Text('AI enable: ${enableAI == true ? 'Yes' : 'No'}'),
+      child: new Text('AI enable: ${enableAI}'),
       color: Colors.blue,
       onPressed: () {
         setState(() {
-          enableAI = enableAI == true ? false : true;
+          if (enableAI == 'true') {
+            enableAI = 'false';
+          } else if (enableAI == 'false') {
+            enableAI = 'only';
+          } else {
+            enableAI = 'true';
+          }
         });
       }
       )
@@ -72,7 +86,7 @@ class MainPageState extends State<MainPage> {
 
           child: new Text('Player color: $playerColor'),
           color: Colors.blue,
-          onPressed: !enableAI ? null : () {
+          onPressed: (enableAI == 'false' || enableAI == 'only') ? null : () {
             setState(() {
               playerColor = playerColor == 'White' ? 'Black' : 'White';
             });
@@ -82,25 +96,57 @@ class MainPageState extends State<MainPage> {
   }
 
   Widget SetDifficultyButton() {
+    var agents  = {
+      1: "Random",
+      2: "MCTS",
+      3: "Negamax"
+    };
     return new DropdownButton(
         underline: Container(
           height: 2,
           color: Colors.blueAccent,
         ),
-        hint: new Text('Difficulty: ${difficulty}'),
+        hint: new Text('A1 Difficulty: ${a1difficulty}'),
         items: <int>[1, 2, 3].map((int value) {
           return new DropdownMenuItem(
             value: value,
-            child: new Text('$value'),
+            child: new Text('$value (${agents[value]})'),
           );
           }).toList(),
         onChanged: (value) {
-          AppSettings.setDifficulty(value);
+          AppSettings.setA1Difficulty(value);
           setState(() {
-            difficulty = value;
+            a1difficulty = value;
           });
         });
   }
+
+  Widget SetAI2DifficultyButton() {
+    var agents  = {
+      1: "Random",
+      2: "MCTS",
+      3: "Negamax"
+    };
+    return new DropdownButton(
+        underline: Container(
+          height: 2,
+          color: Colors.blueAccent,
+        ),
+        hint: new Text('A2 Difficulty: ${a2difficulty}'),
+        items: <int>[1, 2, 3].map((int value) {
+          return new DropdownMenuItem(
+            value: value,
+            child: new Text('$value (${agents[value]})'),
+          );
+        }).toList(),
+        onChanged: enableAI != 'only' ? null : (value) {
+          AppSettings.setA2Difficulty(value);
+          setState(() {
+            a2difficulty = value;
+          });
+        });
+  }
+
 
   Widget StartGameButton() {
     return CupertinoButton(
@@ -110,7 +156,8 @@ class MainPageState extends State<MainPage> {
           CupertinoPageRoute(builder: (context) =>
               GamePage(
                 boardType: selectedBoardType,
-                difficulty: difficulty,
+                a1difficulty: a1difficulty,
+                a2difficulty: a2difficulty,
                 enableAI: enableAI,
                 playerColor: playerColor,
               ))

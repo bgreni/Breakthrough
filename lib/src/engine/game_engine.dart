@@ -31,12 +31,15 @@ class GameEngine {
   List<State> history = [];
   bool gameOver = false;
   AI ai;
+  AI ai2;
   int AIDifficulty;
+  int AI2Difficulty;
 
 
-  GameEngine(int difficulty) {
+  GameEngine(int difficulty, int a2difficulty, bool bothai) {
     state.board.initBoard();
     this.AIDifficulty = difficulty;
+    this.AI2Difficulty = a2difficulty;
     switch(this.AIDifficulty) {
       case 1:
         ai = RandomAI();
@@ -47,6 +50,19 @@ class GameEngine {
       case 3:
         ai = NegamaxAI(C.WANDERER_HEURISTIC);
         break;
+    }
+    if (bothai) {
+      switch (this.AI2Difficulty) {
+        case 1:
+          ai2 = RandomAI();
+          break;
+        case 2:
+          ai2 = FlatMCTSAI();
+          break;
+        case 3:
+          ai2 = NegamaxAI(C.WANDERER_HEURISTIC);
+          break;
+      }
     }
   }
 
@@ -92,6 +108,12 @@ class GameEngine {
   /// Make move for the AI player
   void makeAIMove() {
     Move move = ai.selectMove(state.getLegalMoves(state.turn), state);
+    print('CHOSEN AI MOVE: ${move.from} ${move.to}');
+    this.move(move);
+  }
+
+  void makeAI2Move() {
+    Move move = ai2.selectMove(state.getLegalMoves(state.turn), state);
     print('CHOSEN AI MOVE: ${move.from} ${move.to}');
     this.move(move);
   }

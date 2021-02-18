@@ -6,11 +6,12 @@ import 'dart:async';
 class GamePage extends StatefulWidget {
 
   final String boardType;
-  final int difficulty;
-  final bool enableAI;
+  final int a1difficulty;
+  final int a2difficulty;
+  final String enableAI;
   final String playerColor;
 
-  GamePage({this.boardType, this.difficulty, this.enableAI, this.playerColor});
+  GamePage({this.boardType, this.a1difficulty, this.a2difficulty, this.enableAI, this.playerColor});
 
   @override
   GamePageState createState() => new GamePageState();
@@ -35,9 +36,10 @@ class GamePageState extends State<GamePage> {
                 setState(() {});
               },
               boardType: getBoardType(),
-              difficulty: widget.difficulty,
+              a1difficulty: widget.a1difficulty,
+              a2difficulty: widget.a2difficulty,
               size: MediaQuery.of(context).size.width,
-              enableUserMoves: true,
+              enableUserMoves: widget.enableAI != 'only',
               enableAI: widget.enableAI,
               playerColor: widget.playerColor,
             )

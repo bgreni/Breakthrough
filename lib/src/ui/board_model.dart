@@ -31,10 +31,11 @@ class BoardModel extends Model {
   GameEngine game;
 
   /// Difficulty level
-  int difficulty;
+  int a1difficulty;
+  int a2difficulty;
 
   /// Whether AI is enabled
-  bool enableAI;
+  String enableAI;
 
   /// The color the human is playing
   String playerColor;
@@ -55,15 +56,22 @@ class BoardModel extends Model {
       this.whiteSideTowardsUser,
       this.boardController,
       this.enableUserMoves,
-      this.difficulty,
+      this.a1difficulty,
+      this.a2difficulty,
       this.enableAI,
       this.playerColor,
       ) {
-    game = new GameEngine(this.difficulty);
+    if (this.enableAI != 'only'){
+      game = new GameEngine(this.a1difficulty, 0, false);
+    } else {
+      game = new GameEngine(this.a1difficulty, this.a2difficulty, true);
+    }
+
     boardController?.game = game;
     boardController?.refreshBoard = refreshBoard;
-    if (this.enableAI && this.playerColor == 'Black') {
+    if (this.enableAI == 'true' && this.playerColor == 'Black') {
       game.makeAIMove();
     }
+
   }
 }

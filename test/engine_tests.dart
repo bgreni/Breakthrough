@@ -11,7 +11,7 @@ void main() {
 }
 
 void bigTest() {
-  GameEngine engine = new GameEngine(1);
+  GameEngine engine = new GameEngine(1, 1, false);
   var allai = [
     new FlatMCTSAI(),
     new UCTAI(),
@@ -28,11 +28,12 @@ void bigTest() {
   }
 
   int counter = 0;
+  int MAX_RERUNS = 1;
 
   for (var a1 in allai) {
     for (var a2 in allai) {
       if (a1.getName() != a2.getName()) {
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < MAX_RERUNS; ++i) {
           var winner = engine.AIPlayout(a1, a2);
           var loser = winner == a1.getName() ? a2.getName() : a1.getName();
           wins[winner][loser] += 1;
@@ -60,7 +61,7 @@ void bigTest() {
 
 void testAI() {
   final int MAX_ITERATIONS = 1;
-  GameEngine engine = new GameEngine(1);
+  GameEngine engine = new GameEngine(1, 1, false);
   AI a1 = new FlatMCTSAI();
   // AI a2 = new UCTAI();
   // AI a2 = new WandererAI(C.WANDERER_HEURISTIC);
